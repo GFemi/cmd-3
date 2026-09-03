@@ -134,16 +134,16 @@
             height: 100%;
         }
         .col-left {
-            flex: 0 0 28%;
-            max-width: 28%;
+            flex: 28 1 0;
+            min-width: 0;
         }
         .col-center {
-            flex: 0 0 44%;
-            max-width: 44%;
+            flex: 44 1 0;
+            min-width: 0;
         }
         .col-right {
-            flex: 0 0 28%;
-            max-width: 28%;
+            flex: 28 1 0;
+            min-width: 0;
         }
 
         /* ===== 卡片 ===== */
@@ -525,45 +525,57 @@
             color: #00d4aa;
         }
 
-        /* 指标达标 - 用仪表盘或进度条，我们使用进度条 */
-        .达标-grid {
+        /* 指标达标：每行左侧环形进度，右侧数值及指标名称 */
+        .achievement-list {
             display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 6px;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            grid-template-rows: repeat(2, minmax(0, 1fr));
+            column-gap: 10px;
+            row-gap: 6px;
             height: 100%;
-            align-content: center;
+            padding: 2px 8px;
         }
-        .达标-item {
+        .achievement-item {
             display: flex;
-            flex-direction: column;
             align-items: center;
-            justify-content: center;
-            background: rgba(255, 255, 255, 0.03);
-            border-radius: 4px;
-            padding: 4px;
+            min-width: 0;
+            gap: 10px;
         }
-        .达标-item .label {
-            font-size: 12px;
-            color: rgba(255, 255, 255, 0.5);
-            margin-bottom: 2px;
-        }
-        .达标-item .gauge-wrap {
-            width: 60px;
-            height: 60px;
+        .achievement-ring {
+            width: 32px;
+            height: 32px;
+            flex: 0 0 32px;
+            border-radius: 50%;
+            background: conic-gradient(var(--ring-color) calc(var(--achievement) * 1%), rgba(255,255,255,0.09) 0);
             position: relative;
+            transform: rotate(-90deg);
+            box-shadow: 0 0 10px color-mix(in srgb, var(--ring-color) 35%, transparent);
         }
-        .达标-item .gauge-wrap canvas {
-            width: 100%;
-            height: 100%;
-        }
-        .达标-item .gauge-wrap .center-text {
+        .achievement-ring::after {
+            content: '';
             position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            font-size: 14px;
+            inset: 6px;
+            border-radius: 50%;
+            background: #0d1f3c;
+        }
+        .achievement-copy {
+            display: flex;
+            align-items: baseline;
+            gap: 7px;
+            min-width: 0;
+        }
+        .achievement-value {
+            color: var(--ring-color);
+            font-size: 17px;
             font-weight: 700;
-            color: #fff;
+            line-height: 1;
+            white-space: nowrap;
+        }
+        .achievement-name {
+            color: rgba(255,255,255,0.62);
+            font-size: 12px;
+            line-height: 1;
+            white-space: nowrap;
         }
 
         /* 并发症 - 用进度条 */
@@ -643,16 +655,13 @@
                 font-size: 16px;
             }
             .col-left {
-                flex: 0 0 26%;
-                max-width: 26%;
+                flex-grow: 26;
             }
             .col-center {
-                flex: 0 0 46%;
-                max-width: 46%;
+                flex-grow: 46;
             }
             .col-right {
-                flex: 0 0 28%;
-                max-width: 28%;
+                flex-grow: 28;
             }
             .detect-grid .item .val {
                 font-size: 12px;
@@ -683,16 +692,13 @@
                 min-width: 40px;
             }
             .col-left {
-                flex: 0 0 24%;
-                max-width: 24%;
+                flex-grow: 24;
             }
             .col-center {
-                flex: 0 0 48%;
-                max-width: 48%;
+                flex-grow: 48;
             }
             .col-right {
-                flex: 0 0 28%;
-                max-width: 28%;
+                flex-grow: 28;
             }
             .detect-grid {
                 font-size: 12px;
@@ -707,6 +713,32 @@
             .path-flow .main-row .label {
                 font-size: 12px;
                 min-width: 40px;
+            }
+            .achievement-list {
+                column-gap: 4px;
+                padding: 2px 4px;
+            }
+            .achievement-item {
+                gap: 5px;
+            }
+            .achievement-ring {
+                width: 26px;
+                height: 26px;
+                flex-basis: 26px;
+            }
+            .achievement-ring::after {
+                inset: 5px;
+            }
+            .achievement-copy {
+                align-items: flex-start;
+                flex-direction: column;
+                gap: 2px;
+            }
+            .achievement-value {
+                font-size: 14px;
+            }
+            .achievement-name {
+                font-size: 10px;
             }
         }
     </style>
@@ -906,14 +938,14 @@
                 </div>
             </div>
 
-            <!-- 指标达标情况 - 用仪表盘风格（ECharts gauge） -->
+            <!-- 指标达标情况 -->
             <div class="card">
                 <div class="card-title">
                     <span>🎯 指标达标情况</span>
                     <span class="badge">达标率</span>
                 </div>
                 <div class="card-body">
-                    <div id="gaugeChart" class="chart-container"></div>
+                    <div id="gaugeChart" class="achievement-list"></div>
                 </div>
             </div>
 
@@ -1161,83 +1193,25 @@
             }
 
             // ================================================================
-            //  指标达标情况 - 仪表盘 (ECharts gauge)
+            //  指标达标情况 - 左侧环形进度，右侧数值及名称
             // ================================================================
             function renderGauge() {
-                const chart = initChart('gaugeChart');
-                if (!chart) return;
+                const container = document.getElementById('gaugeChart');
+                if (!container) return;
                 const data = [
-                    { name: '血压达标', value: 52.1 },
-                    { name: '血糖达标', value: 48.3 },
-                    { name: 'HbA1c达标', value: 55.6 },
-                    { name: 'LDL-C达标', value: 42.8 }
+                    { name: '血压达标', value: 52.1, color: '#4DABF7' },
+                    { name: '血糖达标', value: 48.3, color: '#FF6B6B' },
+                    { name: 'HbA1c达标', value: 55.6, color: '#FF9F43' },
+                    { name: 'LDL-C达标', value: 42.8, color: '#00D4AA' }
                 ];
-                // 由于gauge不支持多个仪表盘在一个图表中容易拥挤，我们使用四个仪表盘
-                // 更简单：用四个进度环，但为了简便，我们使用四个独立的gauge，但ECharts一个实例可以放多个gauge
-                // 我们创建一个包含4个gauge的series
-                const option = {
-                    backgroundColor: 'transparent',
-                    tooltip: {
-                        trigger: 'item',
-                        backgroundColor: 'rgba(10,22,40,0.85)',
-                        borderColor: 'rgba(43,127,255,0.3)',
-                        textStyle: { color: '#e0e8f0' },
-                        formatter: function(params) {
-                            return params.name + '：<strong>' + params.value + '%</strong>';
-                        }
-                    },
-                    series: data.map((d, idx) => {
-                        const angle = 180; // 半圆
-                        const radius = 70 - idx * 15;
-                        return {
-                            type: 'gauge',
-                            center: [(idx % 2 === 0 ? 25 : 75) + '%', (idx < 2 ? 27 : 73) + '%'],
-                            radius: '25%',
-                            startAngle: 210,
-                            endAngle: -30,
-                            min: 0,
-                            max: 100,
-                            splitNumber: 5,
-                            progress: {
-                                show: true,
-                                width: 8,
-                                roundCap: true,
-                                itemStyle: {
-                                    color: d.value >= 60 ? '#00D4AA' :
-                                        d.value >= 50 ? '#FF9F43' : '#FF6B6B'
-                                }
-                            },
-                            axisLine: {
-                                lineStyle: {
-                                    width: 8,
-                                    color: [
-                                        [1, 'rgba(255,255,255,0.08)']
-                                    ]
-                                }
-                            },
-                            axisTick: { show: false },
-                            splitLine: { show: false },
-                            axisLabel: { show: false },
-                            anchor: { show: false },
-                            title: {
-                                offsetCenter: [0, '92%'],
-                                fontSize: 12,
-                                color: 'rgba(255,255,255,0.6)'
-                            },
-                            detail: {
-                                offsetCenter: [0, '18%'],
-                                fontSize: 14,
-                                fontWeight: 700,
-                                color: '#fff',
-                                formatter: '{value}%'
-                            },
-                            data: [{ value: d.value, name: d.name }],
-                            animationDuration: 1500,
-                            animationEasing: 'cubicOut'
-                        };
-                    })
-                };
-                chart.setOption(option);
+                container.innerHTML = data.map((item) => `
+                    <div class="achievement-item" style="--achievement:${item.value}; --ring-color:${item.color};">
+                        <span class="achievement-ring" aria-hidden="true"></span>
+                        <div class="achievement-copy">
+                            <span class="achievement-value">${item.value}%</span>
+                            <span class="achievement-name">${item.name}</span>
+                        </div>
+                    </div>`).join('');
             }
 
             // ================================================================
