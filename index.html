@@ -1,0 +1,1794 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>浙江省两慢病全周期健康管理数据大屏</title>
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js">
+    </script>
+    <style>
+        /* ===== 全局重置 ===== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Microsoft YaHei', 'PingFang SC', Arial, sans-serif;
+        }
+        body {
+            background: #0a1628;
+            color: #e0e8f0;
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            user-select: none;
+        }
+        ::-webkit-scrollbar {
+            width: 0;
+            height: 0;
+        }
+
+        /* ===== 顶部 ===== */
+        .header {
+            background: linear-gradient(180deg, #0d1f3c 0%, #0a1628 100%);
+            border-bottom: 1px solid rgba(43, 127, 255, 0.2);
+            padding: 6px 16px 4px;
+            flex-shrink: 0;
+            z-index: 10;
+        }
+        .header-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 4px;
+        }
+        .header-top .title {
+            font-size: 20px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #2B7FFF, #00D4AA);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: 2px;
+        }
+        .header-top .sub-title {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.4);
+            border-left: 1px solid rgba(255, 255, 255, 0.1);
+            padding-left: 14px;
+        }
+        .header-top .time {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.3);
+        }
+
+        .header-kpi {
+            display: flex;
+            align-items: stretch;
+            gap: 6px;
+            flex-wrap: nowrap;
+        }
+        .kpi-item {
+            background: rgba(43, 127, 255, 0.06);
+            border: 1px solid rgba(43, 127, 255, 0.1);
+            border-radius: 6px;
+            padding: 2px 8px 4px;
+            text-align: center;
+            flex: 1;
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        .kpi-item .num {
+            font-size: 20px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #fff, #7abfff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            line-height: 1.2;
+        }
+        .kpi-item .num .unit {
+            font-size: 11px;
+            -webkit-text-fill-color: rgba(255, 255, 255, 0.5);
+        }
+        .kpi-item .label {
+            font-size: 10px;
+            color: rgba(255, 255, 255, 0.5);
+            letter-spacing: 0.3px;
+            white-space: nowrap;
+        }
+        .kpi-item .change {
+            font-size: 9px;
+        }
+        .change.up {
+            color: #ff6b6b;
+        }
+        .change.down {
+            color: #00d4aa;
+        }
+        .kpi-item.highlight {
+            border-color: rgba(0, 212, 170, 0.3);
+            background: rgba(0, 212, 170, 0.05);
+        }
+        .kpi-item.highlight .num {
+            background: linear-gradient(135deg, #00D4AA, #2B7FFF);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* ===== 主体 ===== */
+        .main {
+            flex: 1;
+            display: flex;
+            padding: 6px 12px 12px;
+            gap: 10px;
+            min-height: 0;
+        }
+
+        /* ===== 三列 ===== */
+        .col {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            height: 100%;
+        }
+        .col-left {
+            flex: 0 0 28%;
+            max-width: 28%;
+        }
+        .col-center {
+            flex: 0 0 44%;
+            max-width: 44%;
+        }
+        .col-right {
+            flex: 0 0 28%;
+            max-width: 28%;
+        }
+
+        /* ===== 卡片 ===== */
+        .card {
+            background: rgba(13, 31, 60, 0.6);
+            border-radius: 8px;
+            border: 1px solid rgba(43, 127, 255, 0.1);
+            padding: 6px 8px;
+            backdrop-filter: blur(4px);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            transition: border-color 0.3s;
+            flex: 1;
+        }
+        .card:hover {
+            border-color: rgba(43, 127, 255, 0.25);
+        }
+        .card-title {
+            font-size: 11px;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.7);
+            letter-spacing: 0.4px;
+            margin-bottom: 3px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-shrink: 0;
+        }
+        .card-title .badge {
+            font-size: 8px;
+            background: rgba(43, 127, 255, 0.15);
+            color: #7abfff;
+            padding: 0 8px;
+            border-radius: 10px;
+            line-height: 14px;
+        }
+        .card-body {
+            flex: 1;
+            min-height: 0;
+            position: relative;
+        }
+        .card-body .chart-container {
+            width: 100%;
+            height: 100%;
+        }
+
+        /* ===== 左侧特殊布局 ===== */
+        .col-left .card {
+            flex: 1;
+        }
+        /* 检测情况表格 */
+        .detect-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr 1fr 1fr;
+            gap: 2px;
+            font-size: 9px;
+            height: 100%;
+            align-content: center;
+        }
+        .detect-grid .header {
+            color: rgba(255, 255, 255, 0.4);
+            text-align: center;
+            font-weight: 600;
+            padding: 2px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        .detect-grid .item {
+            text-align: center;
+            padding: 2px 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+        }
+        .detect-grid .item .val {
+            font-weight: 700;
+            font-size: 11px;
+        }
+        .detect-grid .item .label {
+            font-size: 7px;
+            color: rgba(255, 255, 255, 0.4);
+        }
+        .detect-grid .item .val.green {
+            color: #00d4aa;
+        }
+        .detect-grid .item .val.orange {
+            color: #ff9f43;
+        }
+        .detect-grid .item .val.red {
+            color: #ff6b6b;
+        }
+        .detect-grid .item .val.blue {
+            color: #4dabf7;
+        }
+        .detect-grid .row-label {
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.7);
+            text-align: left;
+            padding-left: 4px;
+            font-size: 9px;
+            display: flex;
+            align-items: center;
+        }
+
+        /* ===== 中间地图 ===== */
+        .col-center .card-map {
+            flex: 3;
+        }
+        .col-center .card-path {
+            flex: 1.2;
+        }
+        .map-tabs {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 3px;
+            margin-bottom: 2px;
+            flex-shrink: 0;
+        }
+        .map-tabs button {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            color: rgba(255, 255, 255, 0.5);
+            padding: 1px 8px;
+            border-radius: 12px;
+            font-size: 9px;
+            cursor: pointer;
+            transition: all 0.25s;
+            font-weight: 500;
+            letter-spacing: 0.2px;
+            white-space: nowrap;
+        }
+        .map-tabs button:hover {
+            background: rgba(43, 127, 255, 0.1);
+            color: #fff;
+        }
+        .map-tabs button.active {
+            background: rgba(43, 127, 255, 0.2);
+            border-color: #2B7FFF;
+            color: #fff;
+        }
+
+        /* 路径化执行情况 - 路径流 */
+        .path-flow {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            justify-content: center;
+            gap: 4px;
+        }
+        .path-flow .main-row {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .path-flow .main-row .label {
+            font-size: 10px;
+            color: rgba(255, 255, 255, 0.6);
+            white-space: nowrap;
+            min-width: 60px;
+        }
+        .path-flow .path-bar {
+            flex: 1;
+            height: 20px;
+            background: rgba(255, 255, 255, 0.06);
+            border-radius: 10px;
+            overflow: hidden;
+            display: flex;
+            position: relative;
+        }
+        .path-flow .path-bar .segment {
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 8px;
+            color: #fff;
+            font-weight: 600;
+            transition: width 0.6s;
+            position: relative;
+        }
+        .path-flow .path-bar .segment .tooltip-text {
+            display: none;
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.7);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 8px;
+            white-space: nowrap;
+            color: #fff;
+            pointer-events: none;
+        }
+        .path-flow .path-bar .segment:hover .tooltip-text {
+            display: block;
+        }
+        .path-flow .sub-labels {
+            display: flex;
+            justify-content: space-between;
+            font-size: 8px;
+            color: rgba(255, 255, 255, 0.4);
+            padding: 0 4px;
+        }
+        .path-flow .sub-labels span {
+            text-align: center;
+            flex: 1;
+        }
+        .path-flow .sub-labels .highlight {
+            color: rgba(255, 255, 255, 0.7);
+        }
+        .path-flow .bottom-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 10px;
+            color: rgba(255, 255, 255, 0.6);
+            margin-top: 2px;
+        }
+        .path-flow .bottom-row .num {
+            font-weight: 700;
+            font-size: 14px;
+        }
+        .path-flow .bottom-row .num.blue {
+            color: #4dabf7;
+        }
+        .path-flow .bottom-row .num.green {
+            color: #00d4aa;
+        }
+        .path-flow .bottom-row .num.orange {
+            color: #ff9f43;
+        }
+
+        /* ===== 右侧 ===== */
+        .col-right .card {
+            flex: 1;
+        }
+        /* 转诊 */
+        .refer-flex {
+            display: flex;
+            gap: 6px;
+            height: 100%;
+            align-items: stretch;
+        }
+        .refer-item {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 4px;
+            padding: 2px 4px;
+            border: 1px solid rgba(255, 255, 255, 0.04);
+        }
+        .refer-item .num {
+            font-size: 20px;
+            font-weight: 700;
+            line-height: 1.2;
+        }
+        .refer-item .num.up {
+            color: #ff6b6b;
+        }
+        .refer-item .num.down {
+            color: #00d4aa;
+        }
+        .refer-item .num.blue {
+            color: #4dabf7;
+        }
+        .refer-item .label {
+            font-size: 8px;
+            color: rgba(255, 255, 255, 0.5);
+            text-align: center;
+        }
+        .refer-item .progress-wrap {
+            width: 70%;
+            height: 3px;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 4px;
+            margin-top: 2px;
+            overflow: hidden;
+        }
+        .refer-item .progress-wrap .bar {
+            height: 100%;
+            border-radius: 4px;
+            background: linear-gradient(90deg, #2B7FFF, #00D4AA);
+            transition: width 0.6s;
+        }
+
+        /* 管理情况 - 使用进度条 */
+        .management-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            height: 100%;
+            justify-content: center;
+        }
+        .management-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .management-item .label {
+            font-size: 9px;
+            color: rgba(255, 255, 255, 0.6);
+            min-width: 80px;
+            text-align: right;
+        }
+        .management-item .bar-wrap {
+            flex: 1;
+            height: 12px;
+            background: rgba(255, 255, 255, 0.06);
+            border-radius: 6px;
+            overflow: hidden;
+            position: relative;
+        }
+        .management-item .bar-wrap .fill {
+            height: 100%;
+            border-radius: 6px;
+            transition: width 0.8s;
+        }
+        .management-item .bar-wrap .fill.green {
+            background: linear-gradient(90deg, #00D4AA, #00b894);
+        }
+        .management-item .bar-wrap .fill.orange {
+            background: linear-gradient(90deg, #FF9F43, #e67e22);
+        }
+        .management-item .bar-wrap .fill.red {
+            background: linear-gradient(90deg, #FF6B6B, #c0392b);
+        }
+        .management-item .bar-wrap .fill.blue {
+            background: linear-gradient(90deg, #4dabf7, #2B7FFF);
+        }
+        .management-item .value {
+            font-size: 12px;
+            font-weight: 700;
+            min-width: 40px;
+            text-align: right;
+            color: rgba(255, 255, 255, 0.8);
+        }
+        .management-item .trend {
+            font-size: 8px;
+            margin-left: 4px;
+        }
+        .management-item .trend.up {
+            color: #ff6b6b;
+        }
+        .management-item .trend.down {
+            color: #00d4aa;
+        }
+
+        /* 指标达标 - 用仪表盘或进度条，我们使用进度条 */
+        .达标-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px;
+            height: 100%;
+            align-content: center;
+        }
+        .达标-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 4px;
+            padding: 4px;
+        }
+        .达标-item .label {
+            font-size: 8px;
+            color: rgba(255, 255, 255, 0.5);
+            margin-bottom: 2px;
+        }
+        .达标-item .gauge-wrap {
+            width: 60px;
+            height: 60px;
+            position: relative;
+        }
+        .达标-item .gauge-wrap canvas {
+            width: 100%;
+            height: 100%;
+        }
+        .达标-item .gauge-wrap .center-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 14px;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        /* 并发症 - 用进度条 */
+        .complication-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            height: 100%;
+            justify-content: center;
+        }
+        .complication-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .complication-item .label {
+            font-size: 9px;
+            color: rgba(255, 255, 255, 0.6);
+            min-width: 100px;
+            text-align: right;
+        }
+        .complication-item .bar-wrap {
+            flex: 1;
+            height: 10px;
+            background: rgba(255, 255, 255, 0.06);
+            border-radius: 5px;
+            overflow: hidden;
+        }
+        .complication-item .bar-wrap .fill {
+            height: 100%;
+            border-radius: 5px;
+            transition: width 0.8s;
+        }
+        .complication-item .bar-wrap .fill.green {
+            background: linear-gradient(90deg, #00D4AA, #00b894);
+        }
+        .complication-item .bar-wrap .fill.orange {
+            background: linear-gradient(90deg, #FF9F43, #e67e22);
+        }
+        .complication-item .bar-wrap .fill.red {
+            background: linear-gradient(90deg, #FF6B6B, #c0392b);
+        }
+        .complication-item .bar-wrap .fill.blue {
+            background: linear-gradient(90deg, #4dabf7, #2B7FFF);
+        }
+        .complication-item .value {
+            font-size: 12px;
+            font-weight: 700;
+            min-width: 40px;
+            text-align: right;
+            color: rgba(255, 255, 255, 0.8);
+        }
+        .complication-item .trend {
+            font-size: 8px;
+            margin-left: 4px;
+        }
+        .complication-item .trend.down {
+            color: #00d4aa;
+        }
+        .complication-item .trend.up {
+            color: #ff6b6b;
+        }
+
+        /* ===== 加载动画 ===== */
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* ===== 响应式 ===== */
+        @media (max-width: 1400px) {
+            .header-top .title {
+                font-size: 17px;
+            }
+            .kpi-item .num {
+                font-size: 16px;
+            }
+            .col-left {
+                flex: 0 0 26%;
+                max-width: 26%;
+            }
+            .col-center {
+                flex: 0 0 46%;
+                max-width: 46%;
+            }
+            .col-right {
+                flex: 0 0 28%;
+                max-width: 28%;
+            }
+            .detect-grid .item .val {
+                font-size: 10px;
+            }
+            .management-item .label {
+                font-size: 8px;
+                min-width: 60px;
+            }
+            .达标-item .gauge-wrap {
+                width: 50px;
+                height: 50px;
+            }
+            .达标-item .gauge-wrap .center-text {
+                font-size: 12px;
+            }
+            .complication-item .label {
+                font-size: 8px;
+                min-width: 70px;
+            }
+        }
+        @media (max-width: 1100px) {
+            .header-kpi {
+                flex-wrap: wrap;
+                gap: 3px;
+            }
+            .kpi-item {
+                flex: 1 0 20%;
+                min-width: 40px;
+            }
+            .col-left {
+                flex: 0 0 24%;
+                max-width: 24%;
+            }
+            .col-center {
+                flex: 0 0 48%;
+                max-width: 48%;
+            }
+            .col-right {
+                flex: 0 0 28%;
+                max-width: 28%;
+            }
+            .detect-grid {
+                font-size: 7px;
+            }
+            .detect-grid .item .val {
+                font-size: 8px;
+            }
+            .map-tabs button {
+                font-size: 7px;
+                padding: 1px 5px;
+            }
+            .path-flow .main-row .label {
+                font-size: 8px;
+                min-width: 40px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ==================== 顶部 ==================== -->
+    <header class="header">
+        <div class="header-top">
+            <div style="display:flex; align-items:center; gap:10px;">
+                <span class="title">🫀 浙江两慢病 · 全周期管理</span>
+                <span class="sub-title">数据大屏</span>
+            </div>
+            <span class="time">统计周期 2026年1-8月</span>
+        </div>
+        <div class="header-kpi">
+            <div class="kpi-item highlight">
+                <span class="num">386.5<span class="unit">万</span></span>
+                <div class="label">两慢专档患者</div>
+                <span class="change up">↑ 2.3%</span>
+            </div>
+            <div class="kpi-item">
+                <span class="num">256.3<span class="unit">万</span></span>
+                <div class="label">高血压患者</div>
+                <span class="change up">↑ 1.8%</span>
+            </div>
+            <div class="kpi-item">
+                <span class="num">130.2<span class="unit">万</span></span>
+                <div class="label">糖尿病患者</div>
+                <span class="change up">↑ 3.1%</span>
+            </div>
+            <div class="kpi-item">
+                <span class="num">52.7<span class="unit">万</span></span>
+                <div class="label">高糖合并患者</div>
+                <span class="change up">↑ 2.7%</span>
+            </div>
+            <div class="kpi-item highlight">
+                <span class="num">67.5<span class="unit">%</span></span>
+                <div class="label">检测率</div>
+                <span class="change up">↑ 2.1%</span>
+            </div>
+            <div class="kpi-item">
+                <span class="num">18.6<span class="unit">%</span></span>
+                <div class="label">高风险人数占比</div>
+                <span class="change up">↑ 0.4%</span>
+            </div>
+            <div class="kpi-item">
+                <span class="num">28.3<span class="unit">%</span></span>
+                <div class="label">改善率</div>
+                <span class="change up">↑ 1.7%</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- ==================== 主体 ==================== -->
+    <div class="main">
+
+        <!-- ===== 左列 ===== -->
+        <div class="col col-left">
+            <!-- 1. 一体化门诊覆盖率 -->
+            <div class="card">
+                <div class="card-title">
+                    <span>🏥 一体化门诊覆盖率</span>
+                    <span class="badge">核心</span>
+                </div>
+                <div class="card-body" style="display:flex; align-items:center; justify-content:center;">
+                    <div id="coverChart" style="width:100%;height:100%;"></div>
+                </div>
+            </div>
+
+            <!-- 2. 检测情况（表格） -->
+            <div class="card">
+                <div class="card-title">
+                    <span>🔬 检测情况</span>
+                    <span class="badge">检测·异常·处置·改善</span>
+                </div>
+                <div class="card-body">
+                    <div class="detect-grid" id="detectGrid">
+                        <!-- JS生成 -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3. 就诊率对比趋势图 -->
+            <div class="card">
+                <div class="card-title">
+                    <span>📈 就诊率趋势</span>
+                    <span class="badge">基层 vs 县域</span>
+                </div>
+                <div class="card-body">
+                    <div id="trendChart" class="chart-container"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== 中列 ===== -->
+        <div class="col col-center">
+            <!-- 地图 -->
+            <div class="card card-map">
+                <div class="card-title" style="justify-content:space-between;">
+                    <span id="mapRegionTitle">📍 浙江省热力分布</span>
+                    <div class="map-tabs" id="mapTabs">
+                        <button class="active" data-type="population">专档人数</button>
+                        <button data-type="detection">检测率</button>
+                        <button data-type="risk">风险人数占比</button>
+                        <button data-type="improve">改善率</button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div id="mapChart" class="chart-container"></div>
+                    <div id="mapLoading" style="display:none; position:absolute; inset:0; background:rgba(10,22,40,0.7); justify-content:center; align-items:center; border-radius:8px;">
+                        <div style="display:flex; align-items:center; gap:10px; color:rgba(255,255,255,0.5);">
+                            <div style="width:20px;height:20px;border:2px solid rgba(43,127,255,0.2);border-top-color:#2B7FFF;border-radius:50%;animation:spin 0.8s linear infinite;"></div>
+                            <span>地图加载中...</span>
+                        </div>
+                    </div>
+                    <div id="backToProvince" style="display:none; position:absolute; top:8px; right:8px; z-index:100; background:rgba(43,127,255,0.2); border:1px solid rgba(43,127,255,0.4); border-radius:4px; padding:2px 10px; font-size:11px; color:#fff; cursor:pointer;">← 返回上一级</div>
+                </div>
+            </div>
+
+            <!-- 路径化执行情况 - 路径流 -->
+            <div class="card card-path">
+                <div class="card-title">
+                    <span>📋 路径化执行情况</span>
+                    <span class="badge">入径·执行·闭环</span>
+                </div>
+                <div class="card-body">
+                    <div class="path-flow">
+                        <div class="main-row">
+                            <span class="label">路径总执行率</span>
+                            <div class="path-bar" id="pathBar">
+                                <!-- 由JS动态生成 -->
+                            </div>
+                        </div>
+                        <div class="sub-labels" id="subLabels">
+                            <!-- JS生成 -->
+                        </div>
+                        <div class="bottom-row">
+                            <span><span class="num blue">82%</span> 入径率</span>
+                            <span><span class="num green">68.5%</span> 总执行率</span>
+                            <span><span class="num orange">55%</span> 闭环率</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== 右列 ===== -->
+        <div class="col col-right">
+            <!-- 双向转诊 -->
+            <div class="card">
+                <div class="card-title">
+                    <span>🔄 双向转诊</span>
+                    <span class="badge">上下联动</span>
+                </div>
+                <div class="card-body">
+                    <div class="refer-flex">
+                        <div class="refer-item">
+                            <span class="num up">1,286</span>
+                            <span class="label">上转人次数</span>
+                            <div class="progress-wrap"><div class="bar" style="width:68%;"></div></div>
+                        </div>
+                        <div class="refer-item">
+                            <span class="num blue">74.5%</span>
+                            <span class="label">有效转诊率</span>
+                            <div class="progress-wrap"><div class="bar" style="width:74.5%;"></div></div>
+                        </div>
+                        <div class="refer-item">
+                            <span class="num down">856</span>
+                            <span class="label">下转人次数</span>
+                            <div class="progress-wrap"><div class="bar" style="width:55%;"></div></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 管理情况 - 进度条 -->
+            <div class="card">
+                <div class="card-title">
+                    <span>📋 管理情况</span>
+                    <span class="badge">规范管理</span>
+                </div>
+                <div class="card-body">
+                    <div class="management-grid">
+                        <div class="management-item">
+                            <span class="label">高血压规范管理</span>
+                            <div class="bar-wrap"><div class="fill orange" style="width:58.2%;"></div></div>
+                            <span class="value">58.2%</span>
+                            <span class="trend up">↑2.3%</span>
+                        </div>
+                        <div class="management-item">
+                            <span class="label">糖尿病规范管理</span>
+                            <div class="bar-wrap"><div class="fill green" style="width:62.7%;"></div></div>
+                            <span class="value">62.7%</span>
+                            <span class="trend up">↑1.9%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 指标达标情况 - 用仪表盘风格（ECharts gauge） -->
+            <div class="card">
+                <div class="card-title">
+                    <span>🎯 指标达标情况</span>
+                    <span class="badge">达标率</span>
+                </div>
+                <div class="card-body">
+                    <div id="gaugeChart" class="chart-container"></div>
+                </div>
+            </div>
+
+            <!-- 并发症情况 - 进度条 -->
+            <div class="card">
+                <div class="card-title">
+                    <span>⚠️ 并发症情况</span>
+                    <span class="badge">筛查·发病率</span>
+                </div>
+                <div class="card-body">
+                    <div class="complication-grid">
+                        <div class="complication-item">
+                            <span class="label">并发症筛查率</span>
+                            <div class="bar-wrap"><div class="fill blue" style="width:76.3%;"></div></div>
+                            <span class="value">76.3%</span>
+                            <span class="trend up">↑4.1%</span>
+                        </div>
+                        <div class="complication-item">
+                            <span class="label">并发症发病率</span>
+                            <div class="bar-wrap"><div class="fill orange" style="width:3.2%;"></div></div>
+                            <span class="value">3.2%</span>
+                            <span class="trend down">↓0.6%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ==================== JavaScript ==================== -->
+    <script>
+        (function() {
+            'use strict';
+
+            // ================================================================
+            //  模拟数据
+            // ================================================================
+            const cityNames = ['杭州市', '宁波市', '温州市', '嘉兴市', '湖州市', '绍兴市', '金华市', '衢州市', '舟山市', '台州市', '丽水市'];
+
+            const mapData = {
+                population: [38.6, 32.1, 28.7, 22.5, 18.8, 26.2, 30.6, 15.3, 12.8, 27.9, 14.2],
+                detection: [72, 68, 62, 78, 82, 66, 58, 52, 85, 60, 55],
+                risk: [16, 18, 22, 12, 10, 17, 24, 30, 8, 20, 28],
+                improve: [35, 30, 28, 42, 45, 33, 25, 20, 50, 32, 22]
+            };
+            const riskDetail = {
+                '杭州市': { high: 6.2, mid: 12.4, low: 20.0 },
+                '宁波市': { high: 5.8, mid: 11.2, low: 15.1 },
+                '温州市': { high: 6.5, mid: 12.8, low: 9.4 },
+                '嘉兴市': { high: 2.7, mid: 6.8, low: 13.0 },
+                '湖州市': { high: 1.9, mid: 5.2, low: 11.7 },
+                '绍兴市': { high: 4.6, mid: 9.2, low: 12.4 },
+                '金华市': { high: 7.3, mid: 12.5, low: 10.8 },
+                '衢州市': { high: 4.5, mid: 8.2, low: 2.6 },
+                '舟山市': { high: 1.0, mid: 3.8, low: 8.0 },
+                '台州市': { high: 5.8, mid: 11.8, low: 10.3 },
+                '丽水市': { high: 4.0, mid: 7.6, low: 2.6 }
+            };
+
+            const detectData = [
+                { name: '血压', detect: 80, abnormal: 45, disposal: 72, afterDisposal: 12.6 },
+                { name: '血糖', detect: 65, abnormal: 38, disposal: 68, afterDisposal: 12.2 },
+                { name: 'HbA1c', detect: 58, abnormal: 42, disposal: 65, afterDisposal: 14.7 },
+                { name: 'LDL-C', detect: 45, abnormal: 28, disposal: 60, afterDisposal: 11.2 }
+            ];
+
+            // 路径子项数据
+            const pathSegments = [
+                { label: '诊前采集', value: 72, color: '#4dabf7' },
+                { label: '规范监测', value: 65, color: '#2B7FFF' },
+                { label: '诊间随访', value: 58, color: '#FF9F43' },
+                { label: '健康处方', value: 82, color: '#00D4AA' },
+                { label: '异常追溯', value: 45, color: '#FF6B6B' }
+            ];
+
+            // ================================================================
+            //  工具
+            // ================================================================
+            const charts = {};
+
+            function initChart(domId) {
+                const dom = document.getElementById(domId);
+                if (!dom) return null;
+                const chart = echarts.init(dom, 'dark');
+                charts[domId] = chart;
+                return chart;
+            }
+
+            // ================================================================
+            //  渲染左侧检测表格
+            // ================================================================
+            function renderDetectGrid() {
+                const grid = document.getElementById('detectGrid');
+                if (!grid) return;
+                const headers = ['指标', '检测率', '异常率', '处置率', '处置后异常率'];
+                let html = '';
+                headers.forEach(h => { html += `<div class="header">${h}</div>`; });
+                detectData.forEach(row => {
+                    html += `<div class="row-label">${row.name}</div>`;
+                    html += `<div class="item"><span class="val blue">${row.detect}%</span></div>`;
+                    html += `<div class="item"><span class="val orange">${row.abnormal}%</span></div>`;
+                    html += `<div class="item"><span class="val green">${row.disposal}%</span></div>`;
+                    html += `<div class="item"><span class="val green">${row.afterDisposal}%</span></div>`;
+                });
+                grid.innerHTML = html;
+            }
+
+            // ================================================================
+            //  一体化门诊覆盖率（环形图）
+            // ================================================================
+            function renderCover() {
+                const dom = document.getElementById('coverChart');
+                if (!dom) return;
+                const chart = echarts.init(dom, 'dark');
+                charts['coverChart'] = chart;
+                const val = 76;
+                const option = {
+                    tooltip: {
+                        trigger: 'item',
+                        backgroundColor: 'rgba(10,22,40,0.85)',
+                        borderColor: 'rgba(43,127,255,0.3)',
+                        textStyle: { color: '#e0e8f0' },
+                        formatter: function() { return '一体化门诊覆盖率：<strong>' + val + '%</strong>'; }
+                    },
+                    series: [{
+                        type: 'pie',
+                        radius: ['55%', '80%'],
+                        avoidLabelOverlap: false,
+                        itemStyle: { borderRadius: 4, borderColor: 'rgba(10,22,40,0.6)', borderWidth: 2 },
+                        label: {
+                            show: true,
+                            position: 'center',
+                            formatter: function() { return '{val|' + val + '%}\n{label|覆盖率}'; },
+                            rich: {
+                                val: { fontSize: 28, fontWeight: 700, color: '#fff', lineHeight: 36 },
+                                label: { fontSize: 10, color: 'rgba(255,255,255,0.5)', lineHeight: 16 }
+                            }
+                        },
+                        emphasis: { scale: false, label: { show: true } },
+                        data: [
+                            { value: val, itemStyle: { color: new echarts.graphic.LinearGradient(0, 0, 1, 1, [
+                                    { offset: 0, color: '#2B7FFF' },
+                                    { offset: 1, color: '#00D4AA' }
+                                ]) } },
+                            { value: 100 - val, itemStyle: { color: 'rgba(255,255,255,0.06)' } }
+                        ],
+                        animationDuration: 1200,
+                        animationEasing: 'cubicOut'
+                    }]
+                };
+                chart.setOption(option);
+            }
+
+            // ================================================================
+            //  就诊率趋势图
+            // ================================================================
+            function renderTrend() {
+                const chart = initChart('trendChart');
+                if (!chart) return;
+                const months = ['3月', '4月', '5月', '6月', '7月', '8月'];
+                const primary = [54.2, 55.8, 56.5, 57.8, 58.2, 58.6];
+                const county = [42.5, 42.1, 41.8, 41.5, 41.2, 41.4];
+                const option = {
+                    tooltip: {
+                        trigger: 'axis',
+                        backgroundColor: 'rgba(10,22,40,0.85)',
+                        borderColor: 'rgba(43,127,255,0.3)',
+                        textStyle: { color: '#e0e8f0' },
+                        formatter: function(params) {
+                            let s = params[0].axisValue + '<br/>';
+                            params.forEach(p => {
+                                s += p.marker + ' ' + p.seriesName + '：<strong>' + p.value + '%</strong><br/>';
+                            });
+                            return s;
+                        }
+                    },
+                    legend: {
+                        data: ['基层就诊率', '县域就诊率'],
+                        textStyle: { color: 'rgba(255,255,255,0.5)', fontSize: 9 },
+                        itemWidth: 8,
+                        itemHeight: 8,
+                        bottom: 0,
+                        left: 'center'
+                    },
+                    grid: { left: '8%', right: '6%', top: '8%', bottom: '24%' },
+                    xAxis: {
+                        type: 'category',
+                        data: months,
+                        axisLabel: { color: 'rgba(255,255,255,0.4)', fontSize: 9 },
+                        axisLine: { lineStyle: { color: 'rgba(255,255,255,0.08)' } }
+                    },
+                    yAxis: {
+                        type: 'value',
+                        min: 35,
+                        max: 65,
+                        splitLine: { lineStyle: { color: 'rgba(255,255,255,0.05)', type: 'dashed' } },
+                        axisLabel: { color: 'rgba(255,255,255,0.3)', fontSize: 9, formatter: '{value}%' }
+                    },
+                    series: [{
+                        name: '基层就诊率',
+                        type: 'line',
+                        smooth: true,
+                        symbol: 'circle',
+                        symbolSize: 8,
+                        lineStyle: { color: '#00D4AA', width: 2 },
+                        areaStyle: { color: 'rgba(0,212,170,0.15)' },
+                        data: primary
+                    }, {
+                        name: '县域就诊率',
+                        type: 'line',
+                        smooth: true,
+                        symbol: 'diamond',
+                        symbolSize: 8,
+                        lineStyle: { color: '#2B7FFF', width: 2 },
+                        areaStyle: { color: 'rgba(43,127,255,0.15)' },
+                        data: county
+                    }]
+                };
+                chart.setOption(option);
+            }
+
+            // ================================================================
+            //  路径化执行 - 路径流（纯CSS）
+            // ================================================================
+            function renderPathFlow() {
+                const bar = document.getElementById('pathBar');
+                const labels = document.getElementById('subLabels');
+                if (!bar || !labels) return;
+                // 生成段
+                const total = pathSegments.reduce((s, p) => s + p.value, 0);
+                let html = '';
+                pathSegments.forEach((seg, idx) => {
+                    const width = (seg.value / total * 100).toFixed(1);
+                    html += `<div class="segment" style="width:${width}%;background:${seg.color};">
+                                <span class="tooltip-text">${seg.label} ${seg.value}%</span>
+                            </div>`;
+                });
+                bar.innerHTML = html;
+                // 子标签
+                let labelHtml = '';
+                pathSegments.forEach(seg => {
+                    labelHtml += `<span><span class="highlight">${seg.value}%</span> ${seg.label}</span>`;
+                });
+                labels.innerHTML = labelHtml;
+            }
+
+            // ================================================================
+            //  指标达标情况 - 仪表盘 (ECharts gauge)
+            // ================================================================
+            function renderGauge() {
+                const chart = initChart('gaugeChart');
+                if (!chart) return;
+                const data = [
+                    { name: '血压达标', value: 52.1 },
+                    { name: '血糖达标', value: 48.3 },
+                    { name: 'HbA1c达标', value: 55.6 },
+                    { name: 'LDL-C达标', value: 42.8 }
+                ];
+                // 由于gauge不支持多个仪表盘在一个图表中容易拥挤，我们使用四个仪表盘
+                // 更简单：用四个进度环，但为了简便，我们使用四个独立的gauge，但ECharts一个实例可以放多个gauge
+                // 我们创建一个包含4个gauge的series
+                const option = {
+                    tooltip: {
+                        trigger: 'item',
+                        backgroundColor: 'rgba(10,22,40,0.85)',
+                        borderColor: 'rgba(43,127,255,0.3)',
+                        textStyle: { color: '#e0e8f0' },
+                        formatter: function(params) {
+                            return params.name + '：<strong>' + params.value + '%</strong>';
+                        }
+                    },
+                    series: data.map((d, idx) => {
+                        const angle = 180; // 半圆
+                        const radius = 70 - idx * 15;
+                        return {
+                            type: 'gauge',
+                            center: [(idx % 2 === 0 ? 25 : 75) + '%', (idx < 2 ? 30 : 70) + '%'],
+                            radius: '30%',
+                            startAngle: angle,
+                            endAngle: -angle,
+                            min: 0,
+                            max: 100,
+                            splitNumber: 5,
+                            progress: {
+                                show: true,
+                                width: 8,
+                                roundCap: true,
+                                itemStyle: {
+                                    color: d.value >= 60 ? '#00D4AA' :
+                                        d.value >= 50 ? '#FF9F43' : '#FF6B6B'
+                                }
+                            },
+                            axisLine: {
+                                lineStyle: {
+                                    width: 8,
+                                    color: [
+                                        [1, 'rgba(255,255,255,0.08)']
+                                    ]
+                                }
+                            },
+                            axisTick: { show: false },
+                            splitLine: { show: false },
+                            axisLabel: { show: false },
+                            anchor: { show: false },
+                            title: {
+                                offsetCenter: [0, '50%'],
+                                fontSize: 9,
+                                color: 'rgba(255,255,255,0.6)'
+                            },
+                            detail: {
+                                offsetCenter: [0, '25%'],
+                                fontSize: 14,
+                                fontWeight: 700,
+                                color: '#fff',
+                                formatter: '{value}%'
+                            },
+                            data: [{ value: d.value, name: d.name }],
+                            animationDuration: 1500,
+                            animationEasing: 'cubicOut'
+                        };
+                    })
+                };
+                chart.setOption(option);
+            }
+
+            // ================================================================
+            //  地图（核心）
+            // ================================================================
+            let mapChart = null;
+            let currentMapType = 'population';
+            let geoJsonData = null;
+            let isDrillDown = false;
+
+            function getMapData(type) {
+                return mapData[type] || mapData.population;
+            }
+
+            function getMapMinMax(type) {
+                const ranges = {
+                    population: { min: 10, max: 42 },
+                    detection: { min: 48, max: 88 },
+                    risk: { min: 6, max: 34 },
+                    improve: { min: 18, max: 54 }
+                };
+                return ranges[type] || { min: 0, max: 100 };
+            }
+
+            function getTypeLabel(type) {
+                const map = {
+                    population: '专档人数（万人）',
+                    detection: '检测率（%）',
+                    risk: '高风险人数占比（%）',
+                    improve: '改善率（%）'
+                };
+                return map[type] || '指标';
+            }
+
+            function renderMap(type, geoJson) {
+                if (!mapChart) {
+                    mapChart = echarts.init(document.getElementById('mapChart'), 'dark');
+                    charts['mapChart'] = mapChart;
+                }
+                const data = getMapData(type);
+                const cityData = cityNames.map((name, i) => {
+                    let val = data[i];
+                    if (type === 'population') val = parseFloat(val.toFixed(1));
+                    else val = Math.round(val);
+                    return { name, value: val };
+                });
+                const range = getMapMinMax(type);
+                const option = {
+                    tooltip: {
+                        trigger: 'item',
+                        backgroundColor: 'rgba(10,22,40,0.85)',
+                        borderColor: 'rgba(43,127,255,0.3)',
+                        textStyle: { color: '#e0e8f0' },
+                        formatter: function(params) {
+                            if (!params.data) return params.name + '<br/>数据暂缺';
+                            let info = params.name + '<br/>' + getTypeLabel(type) + '：<strong>' + params.data
+                            .value;
+                            if (type === 'population') info += ' 万';
+                            info += '</strong>';
+                            if (!isDrillDown && riskDetail[params.name]) {
+                                const r = riskDetail[params.name];
+                                info += '<br/>高风险人数：' + r.high + ' 万';
+                                info += '<br/>中风险人数：' + r.mid + ' 万';
+                                info += '<br/>低风险人数：' + r.low + ' 万';
+                            }
+                            return info;
+                        }
+                    },
+                    visualMap: {
+                        min: range.min,
+                        max: range.max,
+                        left: 10,
+                        bottom: 10,
+                        text: ['高', '低'],
+                        textStyle: { color: 'rgba(255,255,255,0.4)', fontSize: 10 },
+                        inRange: {
+                            color: ['#00D4AA', '#FFEAA7', '#FF9F43', '#FF6B6B', '#C0392B']
+                        },
+                        calculable: true,
+                        itemWidth: 12,
+                        itemHeight: 80,
+                    },
+                    series: [{
+                        name: getTypeLabel(type),
+                        type: 'map',
+                        map: 'zhejiang',
+                        roam: true,
+                        selectedMode: false,
+                        label: {
+                            show: true,
+                            color: 'rgba(255,255,255,0.75)',
+                            fontSize: 10,
+                            fontWeight: 500
+                        },
+                        itemStyle: {
+                            borderColor: 'rgba(255,255,255,0.12)',
+                            borderWidth: 1,
+                            areaColor: 'rgba(43,127,255,0.05)',
+                        },
+                        emphasis: {
+                            label: { color: '#fff', fontSize: 12 },
+                            itemStyle: {
+                                areaColor: 'rgba(43,127,255,0.3)',
+                                shadowBlur: 12,
+                                shadowColor: 'rgba(43,127,255,0.4)',
+                            }
+                        },
+                        data: cityData,
+                    }]
+                };
+                mapChart.setOption(option, true);
+                mapChart.off('click');
+                mapChart.on('click', function(params) {
+                    if (isDrillDown) return;
+                    if (params.name === '杭州市') {
+                        drillDownToHangzhou();
+                    }
+                });
+            }
+
+            function drillDownToHangzhou() {
+                const loading = document.getElementById('mapLoading');
+                if (loading) loading.style.display = 'flex';
+                const url = 'https://geo.datav.aliyun.com/areas_v3/bound/330100_full.json';
+                fetch(url)
+                    .then(res => {
+                        if (!res.ok) throw new Error('HTTP ' + res.status);
+                        return res.json();
+                    })
+                    .then(geoJson => {
+                        if (loading) loading.style.display = 'none';
+                        echarts.registerMap('hangzhou', geoJson);
+                        const districts = ['上城区', '拱墅区', '西湖区', '滨江区', '萧山区', '余杭区', '临平区', '钱塘区', '富阳区', '临安区',
+                            '桐庐县', '淳安县', '建德市'
+                        ];
+                        const distData = districts.map(name => {
+                            let val;
+                            switch (currentMapType) {
+                                case 'population':
+                                    val = (Math.random() * 20 + 5).toFixed(1);
+                                    break;
+                                case 'detection':
+                                    val = Math.round(Math.random() * 30 + 55);
+                                    break;
+                                case 'risk':
+                                    val = Math.round(Math.random() * 20 + 10);
+                                    break;
+                                case 'improve':
+                                    val = Math.round(Math.random() * 30 + 20);
+                                    break;
+                            }
+                            return { name, value: parseFloat(val) };
+                        });
+                        const option = {
+                            tooltip: {
+                                trigger: 'item',
+                                backgroundColor: 'rgba(10,22,40,0.85)',
+                                borderColor: 'rgba(43,127,255,0.3)',
+                                textStyle: { color: '#e0e8f0' },
+                                formatter: function(params) {
+                                    if (!params.data) return params.name + '<br/>数据暂缺';
+                                    return params.name + '<br/>' + getTypeLabel(currentMapType) + '：<strong>' +
+                                        params.data.value + (currentMapType === 'population' ? ' 万' : '%') +
+                                        '</strong>';
+                                }
+                            },
+                            visualMap: {
+                                min: getMapMinMax(currentMapType).min,
+                                max: getMapMinMax(currentMapType).max,
+                                left: 10,
+                                bottom: 10,
+                                text: ['高', '低'],
+                                textStyle: { color: 'rgba(255,255,255,0.4)', fontSize: 10 },
+                                inRange: {
+                                    color: ['#00D4AA', '#FFEAA7', '#FF9F43', '#FF6B6B', '#C0392B']
+                                },
+                                calculable: true,
+                                itemWidth: 12,
+                                itemHeight: 80,
+                            },
+                            series: [{
+                                name: getTypeLabel(currentMapType),
+                                type: 'map',
+                                map: 'hangzhou',
+                                roam: true,
+                                selectedMode: false,
+                                label: {
+                                    show: true,
+                                    color: 'rgba(255,255,255,0.75)',
+                                    fontSize: 8,
+                                    fontWeight: 500
+                                },
+                                itemStyle: {
+                                    borderColor: 'rgba(255,255,255,0.12)',
+                                    borderWidth: 1,
+                                    areaColor: 'rgba(43,127,255,0.05)',
+                                },
+                                emphasis: {
+                                    label: { color: '#fff', fontSize: 10 },
+                                    itemStyle: {
+                                        areaColor: 'rgba(43,127,255,0.3)',
+                                        shadowBlur: 12,
+                                        shadowColor: 'rgba(43,127,255,0.4)',
+                                    }
+                                },
+                                data: distData,
+                            }]
+                        };
+                        mapChart.setOption(option, true);
+                        isDrillDown = true;
+                        document.getElementById('backToProvince').style.display = 'block';
+                        mapChart.off('click');
+                    })
+                    .catch(err => {
+                        console.warn('下钻失败', err);
+                        if (loading) loading.style.display = 'none';
+                        alert('下钻失败，请检查网络');
+                    });
+            }
+
+            function backToProvince() {
+                if (!isDrillDown) return;
+                isDrillDown = false;
+                document.getElementById('backToProvince').style.display = 'none';
+                if (geoJsonData) {
+                    echarts.registerMap('zhejiang', geoJsonData);
+                    renderMap(currentMapType, geoJsonData);
+                } else {
+                    loadMap();
+                }
+            }
+
+            function loadMap() {
+                const loading = document.getElementById('mapLoading');
+                if (loading) loading.style.display = 'flex';
+                const url = 'https://geo.datav.aliyun.com/areas_v3/bound/330000_full.json';
+                fetch(url)
+                    .then(res => {
+                        if (!res.ok) throw new Error('HTTP ' + res.status);
+                        return res.json();
+                    })
+                    .then(geoJson => {
+                        geoJsonData = geoJson;
+                        if (loading) loading.style.display = 'none';
+                        echarts.registerMap('zhejiang', geoJson);
+                        renderMap(currentMapType, geoJson);
+                    })
+                    .catch(err => {
+                        console.warn('地图加载失败，使用备用柱状图', err);
+                        if (loading) loading.style.display = 'none';
+                        renderFallbackMap();
+                    });
+            }
+
+            function renderFallbackMap() {
+                const dom = document.getElementById('mapChart');
+                if (!dom) return;
+                const chart = echarts.init(dom, 'dark');
+                charts['mapChart'] = chart;
+                const data = getMapData(currentMapType);
+                const sorted = cityNames.map((name, i) => ({ name, value: data[i] }))
+                    .sort((a, b) => b.value - a.value);
+                const option = {
+                    tooltip: {
+                        trigger: 'axis',
+                        backgroundColor: 'rgba(10,22,40,0.85)',
+                        borderColor: 'rgba(43,127,255,0.3)',
+                        textStyle: { color: '#e0e8f0' },
+                        formatter: function(params) {
+                            const p = params[0];
+                            return p.name + '<br/>' + getTypeLabel(currentMapType) + '：<strong>' + p.value +
+                                (currentMapType === 'population' ? ' 万' : '%') + '</strong>';
+                        }
+                    },
+                    grid: { left: '12%', right: '6%', top: '6%', bottom: '18%' },
+                    xAxis: {
+                        type: 'category',
+                        data: sorted.map(d => d.name),
+                        axisLabel: { color: 'rgba(255,255,255,0.5)', fontSize: 9, interval: 0, rotate: 30 },
+                        axisLine: { lineStyle: { color: 'rgba(255,255,255,0.08)' } }
+                    },
+                    yAxis: {
+                        type: 'value',
+                        splitLine: { lineStyle: { color: 'rgba(255,255,255,0.05)', type: 'dashed' } },
+                        axisLabel: { color: 'rgba(255,255,255,0.4)', fontSize: 9, formatter: '{value}' +
+                                (currentMapType === 'population' ? ' 万' : '%') }
+                    },
+                    series: [{
+                        type: 'bar',
+                        data: sorted.map(d => ({
+                            value: d.value,
+                            itemStyle: {
+                                color: d.value > 80 ? '#C0392B' :
+                                    d.value > 65 ? '#FF6B6B' :
+                                    d.value > 50 ? '#FF9F43' :
+                                    d.value > 35 ? '#FFEAA7' : '#00D4AA',
+                                borderRadius: [2, 2, 0, 0]
+                            }
+                        })),
+                        barWidth: '45%',
+                        label: {
+                            show: true,
+                            position: 'top',
+                            color: 'rgba(255,255,255,0.6)',
+                            fontSize: 9,
+                            formatter: '{c}'
+                        }
+                    }]
+                };
+                chart.setOption(option);
+            }
+
+            // ================================================================
+            //  Tab 切换
+            // ================================================================
+            function setupTabs() {
+                const tabs = document.querySelectorAll('#mapTabs button');
+                tabs.forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        tabs.forEach(b => b.classList.remove('active'));
+                        this.classList.add('active');
+                        const type = this.dataset.type;
+                        currentMapType = type;
+                        if (isDrillDown) {
+                            drillDownToHangzhou();
+                        } else {
+                            if (geoJsonData) {
+                                renderMap(type, geoJsonData);
+                            } else {
+                                renderFallbackMap();
+                            }
+                        }
+                    });
+                });
+                document.getElementById('backToProvince').addEventListener('click', backToProvince);
+            }
+
+            // ================================================================
+            //  地图三级下钻增强（仅覆盖中间地图的原有实现）
+            // ================================================================
+            const drillLevels = [
+                { key: 'zhejiang', title: '浙江省', file: './maps/zhejiang.geojson', nextName: '杭州市' },
+                { key: 'hangzhou', title: '杭州市', file: './maps/hangzhou.geojson', nextName: '余杭区' },
+                { key: 'yuhang', title: '余杭区', file: './maps/yuhang-streets.geojson', nextName: null }
+            ];
+            const drillGeoCache = {};
+            let currentDrillIndex = 0;
+
+            function mapHash(text) {
+                let value = 17;
+                for (let i = 0; i < text.length; i++) {
+                    value = ((value * 31) + text.charCodeAt(i)) >>> 0;
+                }
+                return value;
+            }
+
+            function generatedMapValue(name, type) {
+                const seed = mapHash(name);
+                if (type === 'population') return parseFloat((5 + (seed % 321) / 10).toFixed(1));
+                if (type === 'detection') return 48 + (seed % 41);
+                if (type === 'risk') return 6 + (seed % 29);
+                return 18 + (seed % 37);
+            }
+
+            function generatedRiskDetail(name) {
+                const seed = mapHash(name);
+                return {
+                    high: parseFloat((1.2 + (seed % 56) / 10).toFixed(1)),
+                    mid: parseFloat((3.8 + ((seed * 3) % 102) / 10).toFixed(1)),
+                    low: parseFloat((8 + ((seed * 7) % 161) / 10).toFixed(1))
+                };
+            }
+
+            function createCurrentLevelData(type, geoJson) {
+                return geoJson.features.map(feature => {
+                    const name = feature.properties.name;
+                    let value;
+                    if (currentDrillIndex === 0 && cityNames.indexOf(name) !== -1) {
+                        value = getMapData(type)[cityNames.indexOf(name)];
+                        value = type === 'population' ? parseFloat(value.toFixed(1)) : Math.round(value);
+                    } else {
+                        value = generatedMapValue(name, type);
+                    }
+                    return {
+                        name: name,
+                        value: value,
+                        riskDetail: riskDetail[name] || generatedRiskDetail(name)
+                    };
+                });
+            }
+
+            function riskDot(color) {
+                return '<span style="display:inline-block;width:7px;height:7px;margin-right:6px;border-radius:50%;background:' + color + ';box-shadow:0 0 5px ' + color + ';vertical-align:1px;"></span>';
+            }
+
+            function enhancedTooltip(params) {
+                if (!params.data) return params.name + '<br/>数据暂缺';
+                if (currentMapType !== 'risk') {
+                    return params.name + '<br/>' + getTypeLabel(currentMapType) + '：<strong>' +
+                        params.data.value + (currentMapType === 'population' ? ' 万' : '%') + '</strong>';
+                }
+                const detail = params.data.riskDetail;
+                return params.name +
+                    '<br/>风险人数（占比）：<strong>' + params.data.value + '%</strong>' +
+                    '<br/>' + riskDot('#ff4d5a') + '高风险人数：' + detail.high + ' 万' +
+                    '<br/>' + riskDot('#ffd166') + '中风险人数：' + detail.mid + ' 万' +
+                    '<br/>' + riskDot('#31d995') + '低风险人数：' + detail.low + ' 万';
+            }
+
+            function renderEnhancedMap() {
+                const level = drillLevels[currentDrillIndex];
+                const geoJson = drillGeoCache[level.key];
+                if (!geoJson) return;
+
+                if (!mapChart) {
+                    mapChart = echarts.init(document.getElementById('mapChart'), 'dark');
+                    charts['mapChart'] = mapChart;
+                }
+                echarts.registerMap(level.key, geoJson);
+                const range = getMapMinMax(currentMapType);
+                const option = {
+                    tooltip: {
+                        trigger: 'item',
+                        backgroundColor: 'rgba(10,22,40,0.92)',
+                        borderColor: 'rgba(43,127,255,0.5)',
+                        padding: [8, 10],
+                        textStyle: { color: '#e0e8f0', lineHeight: 20 },
+                        formatter: enhancedTooltip
+                    },
+                    visualMap: {
+                        min: range.min,
+                        max: range.max,
+                        left: 10,
+                        bottom: 10,
+                        text: ['高', '低'],
+                        textStyle: { color: 'rgba(255,255,255,0.4)', fontSize: 10 },
+                        inRange: { color: ['#00D4AA', '#FFEAA7', '#FF9F43', '#FF6B6B', '#C0392B'] },
+                        calculable: true,
+                        itemWidth: 12,
+                        itemHeight: 80
+                    },
+                    series: [{
+                        name: getTypeLabel(currentMapType),
+                        type: 'map',
+                        map: level.key,
+                        roam: true,
+                        selectedMode: false,
+                        top: currentDrillIndex === 2 ? '8%' : '5%',
+                        bottom: currentDrillIndex === 2 ? '7%' : '5%',
+                        label: {
+                            show: true,
+                            color: 'rgba(255,255,255,0.78)',
+                            fontSize: currentDrillIndex === 2 ? 8 : 10,
+                            fontWeight: 500
+                        },
+                        itemStyle: {
+                            borderColor: 'rgba(255,255,255,0.28)',
+                            borderWidth: 0.8,
+                            areaColor: 'rgba(43,127,255,0.05)'
+                        },
+                        emphasis: {
+                            label: { color: '#fff', fontSize: currentDrillIndex === 2 ? 9 : 12 },
+                            itemStyle: {
+                                areaColor: 'rgba(43,127,255,0.35)',
+                                shadowBlur: 12,
+                                shadowColor: 'rgba(43,127,255,0.45)'
+                            }
+                        },
+                        data: createCurrentLevelData(currentMapType, geoJson)
+                    }]
+                };
+                mapChart.setOption(option, true);
+                mapChart.off('click');
+                mapChart.on('click', function(params) {
+                    if (level.nextName && params.name === level.nextName) {
+                        setDrillLevel(currentDrillIndex + 1);
+                    }
+                });
+            }
+
+            function setDrillLevel(index) {
+                const level = drillLevels[index];
+                if (!level) return;
+                const loading = document.getElementById('mapLoading');
+                if (loading) loading.style.display = 'flex';
+
+                const finish = function(geoJson) {
+                    drillGeoCache[level.key] = geoJson;
+                    currentDrillIndex = index;
+                    isDrillDown = index > 0;
+                    document.getElementById('mapRegionTitle').textContent = '📍 ' + level.title + '热力分布';
+                    document.getElementById('backToProvince').style.display = index > 0 ? 'block' : 'none';
+                    if (loading) loading.style.display = 'none';
+                    renderEnhancedMap();
+                };
+
+                if (drillGeoCache[level.key]) {
+                    finish(drillGeoCache[level.key]);
+                    return;
+                }
+                fetch(level.file)
+                    .then(res => {
+                        if (!res.ok) throw new Error('HTTP ' + res.status);
+                        return res.json();
+                    })
+                    .then(finish)
+                    .catch(err => {
+                        console.warn('地图加载失败', err);
+                        if (loading) loading.style.display = 'none';
+                        alert('地图加载失败，请通过本地 Web 服务打开页面');
+                    });
+            }
+
+            // 覆盖原地图入口，页面其他模块仍沿用原初始化逻辑。
+            function loadMap() {
+                setDrillLevel(0);
+            }
+
+            function renderMap(type) {
+                currentMapType = type || currentMapType;
+                renderEnhancedMap();
+            }
+
+            function backToProvince() {
+                if (currentDrillIndex > 0) setDrillLevel(currentDrillIndex - 1);
+            }
+
+            function setupTabs() {
+                const tabs = document.querySelectorAll('#mapTabs button');
+                tabs.forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        tabs.forEach(b => b.classList.remove('active'));
+                        this.classList.add('active');
+                        currentMapType = this.dataset.type;
+                        renderEnhancedMap();
+                    });
+                });
+                document.getElementById('backToProvince').addEventListener('click', backToProvince);
+            }
+
+            // ================================================================
+            //  自适应
+            // ================================================================
+            function resizeAll() {
+                Object.values(charts).forEach(chart => {
+                    if (chart && !chart.isDisposed()) {
+                        chart.resize();
+                    }
+                });
+            }
+
+            // ================================================================
+            //  启动
+            // ================================================================
+            function init() {
+                renderDetectGrid();
+                renderCover();
+                renderTrend();
+                renderPathFlow();
+                renderGauge();
+                loadMap();
+                setupTabs();
+
+                window.addEventListener('resize', resizeAll);
+                if (window.ResizeObserver) {
+                    const ro = new ResizeObserver(() => resizeAll());
+                    ro.observe(document.querySelector('.main'));
+                }
+                setTimeout(resizeAll, 400);
+            }
+
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', init);
+            } else {
+                init();
+            }
+
+        })();
+    </script>
+
+</body>
+</html>
