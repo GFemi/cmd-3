@@ -1739,6 +1739,9 @@
                 }
                 echarts.registerMap(level.key, geoJson);
                 const range = getMapMinMax(currentMapType);
+                const mapLayout = currentDrillIndex === 1
+                    ? { left: '9%', right: '9%', top: '9%', bottom: '9%' }
+                    : { top: currentDrillIndex === 2 ? '8%' : '5%', bottom: currentDrillIndex === 2 ? '7%' : '5%' };
                 const option = {
                     backgroundColor: 'transparent',
                     tooltip: {
@@ -1767,8 +1770,7 @@
                         map: level.key,
                         roam: true,
                         selectedMode: false,
-                        top: currentDrillIndex === 2 ? '8%' : '5%',
-                        bottom: currentDrillIndex === 2 ? '7%' : '5%',
+                        ...mapLayout,
                         label: {
                             show: true,
                             color: 'rgba(255,255,255,0.78)',
@@ -1856,7 +1858,6 @@
                         this.classList.add('active');
                         currentMapType = this.dataset.type;
                         renderEnhancedMap();
-                        updateDashboardMetrics();
                     });
                 });
                 document.getElementById('backToProvince').addEventListener('click', backToProvince);
