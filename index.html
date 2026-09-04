@@ -1041,22 +1041,26 @@
             const metricUnits = ['万', '万', '万', '万', '%', '%', '%', '%'];
             const metricChanges = ['↓ 2.3%', '↓ 1.8%', '↓ 3.1%', '↓ 2.7%', '↑ 2.1%', '↓ 0.4%', '↑ 1.7%', '持平'];
             const metricTrends = ['down', 'down', 'down', 'down', 'up', 'down', 'up', 'flat'];
-            const typeOffsets = {
-                population: [0, 0, 0, 0, 0, 0, 0, 0],
-                detection: [-4.8, -3.1, -2.2, -0.8, 6.4, -1.1, 1.8, 0],
-                risk: [-6.5, -4.2, -2.7, -1.1, -1.8, -5.6, -1.2, 0],
-                improve: [-3.2, -2.1, -1.4, -0.6, 2.7, -0.5, 5.3, 0]
-            };
+            // 人口类指标按历史年份采用同比系数，确保各层级、各周期均为合理的正数。
+            // 地图 Tab 仅影响地图本身，不参与仪表盘指标计算。
+            const yearPopulationFactors = { 2026: 1, 2025: 0.96, 2024: 0.91 };
+            const yearRateOffsets = { 2026: 0, 2025: -1.2, 2024: -2.5 };
+            const quarterRateOffsets = { Q1: -0.8, Q2: -0.4, Q3: 0, Q4: 0.5 };
 
             function updateDashboardMetrics() {
-                const offsets = typeOffsets[currentMapType] || typeOffsets.population;
                 const selectedYear = Number(document.getElementById('yearSelector')?.value || 2026);
-                const yearFactor = (selectedYear - 2026) * 1.8;
-                const periodFactor = currentPeriod === 'quarter' ? 0.45 : 0;
+                const selectedQuarter = document.getElementById('quarterSelector')?.value || 'Q3';
+                const populationFactor = yearPopulationFactors[selectedYear] ?? 1;
+                const rateYearOffset = yearRateOffsets[selectedYear] ?? 0;
+                const rateQuarterOffset = currentPeriod === 'quarter' ? (quarterRateOffsets[selectedQuarter] ?? 0) : 0;
                 const levelBase = levelMetricBase[currentDrillIndex] || levelMetricBase[0];
-                const levelScale = [1, 0.25, 0.05][currentDrillIndex] ?? 1;
                 document.querySelectorAll('.header-kpi .kpi-item').forEach((item, index) => {
-                    const value = index === 7 ? 100 : levelBase[index] + offsets[index] * levelScale + yearFactor + periodFactor;
+                    const isPopulation = index < 4;
+                    const value = index === 7
+                        ? 100
+                        : Math.max(0.1, isPopulation
+                            ? levelBase[index] * populationFactor
+                            : levelBase[index] + rateYearOffset + rateQuarterOffset);
                     const precision = 1;
                     item.querySelector('.num').innerHTML = `${value.toFixed(precision)}<span class="unit">${metricUnits[index]}</span>`;
                     const change = item.querySelector('.change');
@@ -1064,8 +1068,7 @@
                     change.className = `change ${metricTrends[index]}`;
                 });
                 const levelCoverBase = [69, 73, 76][currentDrillIndex] ?? 69;
-                const coverOffsets = { population: 0, detection: 3, risk: -2, improve: 5 };
-                const coverValue = levelCoverBase + coverOffsets[currentMapType] + yearFactor + (currentPeriod === 'quarter' ? 1 : 0);
+                const coverValue = Math.max(1, levelCoverBase + rateYearOffset + rateQuarterOffset);
                 document.getElementById('coverTarget').textContent = `${Math.min(95, coverValue + 4)}%`;
                 document.getElementById('coverChange').textContent = `+${(coverValue - 73).toFixed(1)}%`;
                 renderCover(coverValue);
