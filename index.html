@@ -42,6 +42,7 @@
             align-items: center;
             justify-content: space-between;
             margin-bottom: 4px;
+            position: relative;
         }
         .header-top .title {
             font-size: 20px;
@@ -50,6 +51,11 @@
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             letter-spacing: 2px;
+        }
+        .header-top > div:first-child {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
         }
         .header-top .sub-title {
             font-size: 12px;
@@ -190,12 +196,39 @@
             width: 100%;
             height: 100%;
         }
+        .layout-trend .card-title {
+            position: relative;
+        }
+        .trend-legend {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: rgba(255,255,255,.58);
+            font-size: 11px;
+            font-weight: 500;
+            white-space: nowrap;
+        }
+        .trend-legend-item {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .trend-legend-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+        }
+        .trend-legend-dot.primary { background: #4dabf7; box-shadow: 0 0 5px rgba(77,171,247,.7); }
+        .trend-legend-dot.county { background: #00d4aa; box-shadow: 0 0 5px rgba(0,212,170,.7); }
 
         .layout-map { flex: 3 1 0; }
         .layout-trend { flex: 1.25 1 0; }
-        .layout-cover { flex: 1.35 1 0; }
-        .layout-path { flex: 1.5 1 0; }
-        .layout-detect { flex: 1.25 1 0; }
+        .layout-cover { flex: 1.15 1 0; }
+        .layout-path { flex: 1.55 1 0; }
+        .layout-detect { flex: 1.4 1 0; }
         .layout-achievement { flex: 1.1 1 0; }
         .cover-layout {
             display: flex;
@@ -248,6 +281,11 @@
             text-align: center;
             font-weight: 600;
             border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        .detect-grid .header:first-child {
+            justify-content: flex-start;
+            padding-left: 4px;
+            text-align: left;
         }
         .detect-grid .item {
             text-align: center;
@@ -446,11 +484,11 @@
         }
         .path-entry-card {
             margin-left: auto;
-            margin-right: 5px;
+            margin-right: 4px;
             position: relative;
             overflow: hidden;
-            min-width: 92px;
-            padding: 6px 9px 6px 12px;
+            min-width: 112px;
+            padding: 8px 12px 8px 15px;
             border: 1px solid rgba(68, 133, 203, .22);
             border-radius: 5px;
             background: linear-gradient(135deg, rgba(32, 74, 124, .24), rgba(13, 28, 53, .08));
@@ -469,14 +507,14 @@
         }
         .path-entry {
             color: #4dabf7;
-            font-size: 13px;
+            font-size: 15px;
             font-weight: 700;
             white-space: nowrap;
         }
         .path-entry span {
             margin-left: 4px;
             color: rgba(255,255,255,.6);
-            font-size: 12px;
+            font-size: 13px;
             font-weight: 400;
         }
 
@@ -599,13 +637,12 @@
             color: #00d4aa;
         }
 
-        /* 指标达标：每行左侧环形进度，右侧数值及指标名称 */
+        /* 指标达标：四项横向排列，左环右侧信息 */
         .achievement-list {
             display: grid;
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-            grid-template-rows: repeat(2, minmax(0, 1fr));
-            column-gap: 10px;
-            row-gap: 6px;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            align-items: center;
+            column-gap: 14px;
             height: 100%;
             padding: 2px 8px;
         }
@@ -613,12 +650,12 @@
             display: flex;
             align-items: center;
             min-width: 0;
-            gap: 10px;
+            gap: 11px;
         }
         .achievement-ring {
-            width: 32px;
-            height: 32px;
-            flex: 0 0 32px;
+            width: clamp(40px, 4vw, 56px);
+            height: clamp(40px, 4vw, 56px);
+            flex: 0 0 clamp(40px, 4vw, 56px);
             border-radius: 50%;
             background: conic-gradient(var(--ring-color) calc(var(--achievement) * 1%), rgba(255,255,255,0.09) 0);
             position: relative;
@@ -628,19 +665,21 @@
         .achievement-ring::after {
             content: '';
             position: absolute;
-            inset: 6px;
+            inset: 19%;
             border-radius: 50%;
             background: #0d1f3c;
         }
         .achievement-copy {
             display: flex;
-            align-items: baseline;
-            gap: 7px;
+            flex-direction: column;
+            align-items: flex-start;
+            justify-content: center;
+            gap: 5px;
             min-width: 0;
         }
         .achievement-value {
             color: var(--ring-color);
-            font-size: 17px;
+            font-size: clamp(17px, 1.65vw, 23px);
             font-weight: 700;
             line-height: 1;
             white-space: nowrap;
@@ -796,9 +835,9 @@
                 gap: 5px;
             }
             .achievement-ring {
-                width: 26px;
-                height: 26px;
-                flex-basis: 26px;
+                width: 32px;
+                height: 32px;
+                flex-basis: 32px;
             }
             .achievement-ring::after {
                 inset: 5px;
@@ -888,7 +927,7 @@
                 </div>
             </div>
             <div class="card layout-trend">
-                <div class="card-title"><span>📈 就诊率趋势</span><span class="badge">基层 vs 县域</span></div>
+                <div class="card-title"><span>📈 就诊率趋势</span><span class="badge">基层 vs 县域</span><div class="trend-legend"><span class="trend-legend-item"><i class="trend-legend-dot primary"></i>基层就诊率</span><span class="trend-legend-item"><i class="trend-legend-dot county"></i>县域就诊率</span></div></div>
                 <div class="card-body"><div id="trendChart" class="chart-container"></div></div>
             </div>
         </div>
@@ -1080,6 +1119,7 @@
                         }
                     },
                     legend: {
+                        show: false,
                         data: ['基层就诊率', '县域就诊率'],
                         textStyle: { color: 'rgba(255,255,255,0.5)', fontSize: 12 },
                         itemWidth: 8,
@@ -1087,7 +1127,7 @@
                         bottom: 0,
                         left: 'center'
                     },
-                    grid: { left: '13%', right: '6%', top: '8%', bottom: '27%' },
+                    grid: { left: '13%', right: '6%', top: '8%', bottom: '13%' },
                     xAxis: {
                         type: 'category',
                         data: months,
@@ -1107,17 +1147,19 @@
                         smooth: true,
                         symbol: 'circle',
                         symbolSize: 8,
-                        lineStyle: { color: '#00D4AA', width: 2 },
-                        areaStyle: { color: 'rgba(0,212,170,0.15)' },
+                        lineStyle: { color: '#4DABF7', width: 2 },
+                        itemStyle: { color: '#4DABF7' },
+                        areaStyle: { color: 'rgba(77,171,247,0.15)' },
                         data: primary
                     }, {
                         name: '县域就诊率',
                         type: 'line',
                         smooth: true,
-                        symbol: 'diamond',
+                        symbol: 'circle',
                         symbolSize: 8,
-                        lineStyle: { color: '#2B7FFF', width: 2 },
-                        areaStyle: { color: 'rgba(43,127,255,0.15)' },
+                        lineStyle: { color: '#00D4AA', width: 2 },
+                        itemStyle: { color: '#00D4AA' },
+                        areaStyle: { color: 'rgba(0,212,170,0.15)' },
                         data: county
                     }]
                 };
