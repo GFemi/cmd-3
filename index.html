@@ -1033,7 +1033,11 @@
             ];
 
             let currentPeriod = 'year';
-            const metricBase = [386.5, 256.3, 130.2, 52.7, 67.5, 18.6, 28.3, 100];
+            const levelMetricBase = [
+                [386.5, 256.3, 130.2, 52.7, 67.5, 18.6, 28.3, 100],
+                [46.8, 31.4, 16.8, 6.7, 70.4, 17.2, 30.1, 100],
+                [7.6, 5.1, 2.7, 1.0, 74.2, 15.4, 33.6, 100]
+            ];
             const metricUnits = ['万', '万', '万', '万', '%', '%', '%', '%'];
             const metricChanges = ['↓ 2.3%', '↓ 1.8%', '↓ 3.1%', '↓ 2.7%', '↑ 2.1%', '↓ 0.4%', '↑ 1.7%', '持平'];
             const metricTrends = ['down', 'down', 'down', 'down', 'up', 'down', 'up', 'flat'];
@@ -1049,16 +1053,19 @@
                 const selectedYear = Number(document.getElementById('yearSelector')?.value || 2026);
                 const yearFactor = (selectedYear - 2026) * 1.8;
                 const periodFactor = currentPeriod === 'quarter' ? 0.45 : 0;
+                const levelBase = levelMetricBase[currentDrillIndex] || levelMetricBase[0];
+                const levelScale = [1, 0.25, 0.05][currentDrillIndex] ?? 1;
                 document.querySelectorAll('.header-kpi .kpi-item').forEach((item, index) => {
-                    const value = index === 7 ? 100 : metricBase[index] + offsets[index] + yearFactor + periodFactor;
+                    const value = index === 7 ? 100 : levelBase[index] + offsets[index] * levelScale + yearFactor + periodFactor;
                     const precision = 1;
                     item.querySelector('.num').innerHTML = `${value.toFixed(precision)}<span class="unit">${metricUnits[index]}</span>`;
                     const change = item.querySelector('.change');
                     change.textContent = metricChanges[index];
                     change.className = `change ${metricTrends[index]}`;
                 });
-                const coverValues = { population: 76, detection: 79, risk: 73, improve: 81 };
-                const coverValue = coverValues[currentMapType] + yearFactor + (currentPeriod === 'quarter' ? 1 : 0);
+                const levelCoverBase = [69, 73, 76][currentDrillIndex] ?? 69;
+                const coverOffsets = { population: 0, detection: 3, risk: -2, improve: 5 };
+                const coverValue = levelCoverBase + coverOffsets[currentMapType] + yearFactor + (currentPeriod === 'quarter' ? 1 : 0);
                 document.getElementById('coverTarget').textContent = `${Math.min(95, coverValue + 4)}%`;
                 document.getElementById('coverChange').textContent = `+${(coverValue - 73).toFixed(1)}%`;
                 renderCover(coverValue);
@@ -1807,6 +1814,7 @@
                     document.getElementById('backToProvince').style.display = index > 0 ? 'block' : 'none';
                     if (loading) loading.style.display = 'none';
                     renderEnhancedMap();
+                    updateDashboardMetrics();
                 };
 
                 if (drillGeoCache[level.key]) {
