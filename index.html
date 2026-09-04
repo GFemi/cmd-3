@@ -108,10 +108,13 @@
             font-size: 12px;
         }
         .change.up {
-            color: #ff6b6b;
+            color: #00d4aa;
         }
         .change.down {
             color: #00d4aa;
+        }
+        .change.flat {
+            color: rgba(255, 255, 255, 0.48);
         }
         .kpi-item.highlight {
             border-color: rgba(0, 212, 170, 0.3);
@@ -870,17 +873,17 @@
             <div class="kpi-item">
                 <span class="num">386.5<span class="unit">万</span></span>
                 <div class="label">两慢专档患者</div>
-                <span class="change up">↑ 2.3%</span>
+                <span class="change down">↓ 2.3%</span>
             </div>
             <div class="kpi-item">
                 <span class="num">256.3<span class="unit">万</span></span>
                 <div class="label">高血压患者</div>
-                <span class="change up">↑ 1.8%</span>
+                <span class="change down">↓ 1.8%</span>
             </div>
             <div class="kpi-item">
                 <span class="num">130.2<span class="unit">万</span></span>
                 <div class="label">糖尿病患者</div>
-                <span class="change up">↑ 3.1%</span>
+                <span class="change down">↓ 3.1%</span>
             </div>
             <div class="kpi-item">
                 <span class="num">67.5<span class="unit">%</span></span>
@@ -890,7 +893,7 @@
             <div class="kpi-item">
                 <span class="num">18.6<span class="unit">%</span></span>
                 <div class="label">高风险人数占比</div>
-                <span class="change up">↑ 0.4%</span>
+                <span class="change down">↓ 0.4%</span>
             </div>
             <div class="kpi-item">
                 <span class="num">28.3<span class="unit">%</span></span>
@@ -898,9 +901,9 @@
                 <span class="change up">↑ 1.7%</span>
             </div>
             <div class="kpi-item">
-                <span class="num">96.8<span class="unit">%</span></span>
+                <span class="num">100<span class="unit">%</span></span>
                 <div class="label">数据可信度</div>
-                <span class="change up">↑ 0.3%</span>
+                <span class="change flat">持平</span>
             </div>
         </div>
     </header>
@@ -1006,11 +1009,11 @@
 
             // 路径子项数据
             const pathSegments = [
-                { label: '诊前采集率', value: 72, color: '#4dabf7' },
-                { label: '规范监测率', value: 65, color: '#2B7FFF' },
-                { label: '健康处方打印率', value: 82, color: '#00D4AA' },
-                { label: '异常追溯', value: 45, color: '#FF6B6B' },
-                { label: '转诊率', value: 74.5, color: '#FF9F43' }
+                { label: '诊前采集率', value: 72, color: '#7DD3FC' },
+                { label: '规范监测率', value: 65, color: '#4DABF7' },
+                { label: '健康处方打印率', value: 82, color: '#2B7FFF' },
+                { label: '异常追溯', value: 45, color: '#2563EB' },
+                { label: '转诊率', value: 74.5, color: '#1D4ED8' }
             ];
 
             // ================================================================
