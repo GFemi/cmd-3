@@ -308,7 +308,7 @@
         /* 检测情况表格 */
         .detect-grid {
             display: grid;
-            grid-template-columns: 1fr 1fr 1fr 1fr 1fr;
+            grid-template-columns: .9fr 1fr 1fr 1fr 1.25fr;
             grid-template-rows: repeat(5, minmax(0, 1fr));
             gap: 2px;
             font-size: 12px;
@@ -321,6 +321,7 @@
             color: rgba(255, 255, 255, 0.4);
             text-align: center;
             font-weight: 600;
+            white-space: nowrap;
             border-bottom: 1px solid rgba(255, 255, 255, 0.05);
         }
         .detect-grid .header:first-child {
@@ -411,14 +412,14 @@
             flex-direction: column;
             height: 100%;
             justify-content: center;
-            padding: 2px 10px;
+            padding: 2px 2px;
         }
         .path-stage-line {
             display: grid;
             grid-template-columns: repeat(5, minmax(0, 1fr));
             align-items: start;
             width: 100%;
-            padding: 1px 5px 0;
+            padding: 1px 0 0;
         }
         .path-stage {
             position: relative;
@@ -485,10 +486,10 @@
         .path-stage-name {
             margin-top: 8px;
             color: rgba(224, 232, 240, .68);
-            font-size: 12px;
-            line-height: 1.25;
+            font-size: 11px;
+            line-height: 1.2;
             text-align: center;
-            white-space: normal;
+            white-space: nowrap;
         }
         .path-summary {
             display: grid;
@@ -696,6 +697,7 @@
         .achievement-item {
             display: flex;
             align-items: center;
+            justify-content: center;
             min-width: 0;
             gap: 11px;
         }
@@ -937,6 +939,11 @@
                 <span class="change down">↓ 3.1%</span>
             </div>
             <div class="kpi-item">
+                <span class="num">52.7<span class="unit">万</span></span>
+                <div class="label">高糖合并患者</div>
+                <span class="change down">↓ 2.7%</span>
+            </div>
+            <div class="kpi-item">
                 <span class="num">67.5<span class="unit">%</span></span>
                 <div class="label">检测率</div>
                 <span class="change up">↑ 2.1%</span>
@@ -964,7 +971,7 @@
 
         <!-- ===== 左侧：管理执行 ===== -->
         <div class="col col-left">
-            <div class="card layout-cover"><div class="card-title"><span>🏥 一体化门诊覆盖率</span><span class="badge">核心</span></div><div class="card-body"><div class="cover-layout"><div id="coverChart" class="cover-chart"></div><div class="cover-meta"><span class="cover-meta-label">目标覆盖率</span><span class="cover-meta-target">80%</span><span class="cover-meta-trend">较上期 <strong>+2.3%</strong></span></div></div></div></div>
+            <div class="card layout-cover"><div class="card-title"><span>🏥 一体化门诊覆盖率</span><span class="badge">核心</span></div><div class="card-body"><div class="cover-layout"><div id="coverChart" class="cover-chart"></div><div class="cover-meta"><span class="cover-meta-label">目标覆盖率</span><span class="cover-meta-target" id="coverTarget">80%</span><span class="cover-meta-trend">较上期 <strong id="coverChange">+2.3%</strong></span></div></div></div></div>
             <div class="card layout-path"><div class="card-title"><span>📋 路径化执行情况</span><span class="badge">执行路径</span><span class="path-entry-card"><span class="path-entry">82%<span>入径率</span></span></span></div><div class="card-body"><div class="path-flow"><div class="path-stage-line" id="pathStages"></div></div></div></div>
             <div class="card layout-detect"><div class="card-title"><span>🔬 检测情况</span><span class="badge">检测·异常·处置·改善</span></div><div class="card-body"><div class="detect-grid" id="detectGrid"></div></div></div>
         </div>
@@ -1025,13 +1032,45 @@
                 { name: 'LDL-C', detect: 45, abnormal: 28, disposal: 60, afterDisposal: 11.2 }
             ];
 
+            let currentPeriod = 'year';
+            const metricBase = [386.5, 256.3, 130.2, 52.7, 67.5, 18.6, 28.3, 100];
+            const metricUnits = ['万', '万', '万', '万', '%', '%', '%', '%'];
+            const metricChanges = ['↓ 2.3%', '↓ 1.8%', '↓ 3.1%', '↓ 2.7%', '↑ 2.1%', '↓ 0.4%', '↑ 1.7%', '持平'];
+            const metricTrends = ['down', 'down', 'down', 'down', 'up', 'down', 'up', 'flat'];
+            const typeOffsets = {
+                population: [0, 0, 0, 0, 0, 0, 0, 0],
+                detection: [-4.8, -3.1, -2.2, -0.8, 6.4, -1.1, 1.8, 0],
+                risk: [-6.5, -4.2, -2.7, -1.1, -1.8, -5.6, -1.2, 0],
+                improve: [-3.2, -2.1, -1.4, -0.6, 2.7, -0.5, 5.3, 0]
+            };
+
+            function updateDashboardMetrics() {
+                const offsets = typeOffsets[currentMapType] || typeOffsets.population;
+                const selectedYear = Number(document.getElementById('yearSelector')?.value || 2026);
+                const yearFactor = (selectedYear - 2026) * 1.8;
+                const periodFactor = currentPeriod === 'quarter' ? 0.45 : 0;
+                document.querySelectorAll('.header-kpi .kpi-item').forEach((item, index) => {
+                    const value = index === 7 ? 100 : metricBase[index] + offsets[index] + yearFactor + periodFactor;
+                    const precision = 1;
+                    item.querySelector('.num').innerHTML = `${value.toFixed(precision)}<span class="unit">${metricUnits[index]}</span>`;
+                    const change = item.querySelector('.change');
+                    change.textContent = metricChanges[index];
+                    change.className = `change ${metricTrends[index]}`;
+                });
+                const coverValues = { population: 76, detection: 79, risk: 73, improve: 81 };
+                const coverValue = coverValues[currentMapType] + yearFactor + (currentPeriod === 'quarter' ? 1 : 0);
+                document.getElementById('coverTarget').textContent = `${Math.min(95, coverValue + 4)}%`;
+                document.getElementById('coverChange').textContent = `+${(coverValue - 73).toFixed(1)}%`;
+                renderCover(coverValue);
+            }
+
             // 路径子项数据
             const pathSegments = [
                 { label: '诊前采集率', value: 72, color: '#7DD3FC' },
-                { label: '规范监测率', value: 65, color: '#4DABF7' },
-                { label: '健康处方打印率', value: 82, color: '#2B7FFF' },
-                { label: '异常追溯', value: 45, color: '#2563EB' },
-                { label: '转诊率', value: 74.5, color: '#1D4ED8' }
+                { label: '规范监测率', value: 65, color: '#5FB7F7' },
+                { label: '健康处方打印率', value: 82, color: '#479AF5' },
+                { label: '异常追溯', value: 45, color: '#367FF3' },
+                { label: '转诊率', value: 74.5, color: '#2B7FFF' }
             ];
 
             // ================================================================
@@ -1069,12 +1108,12 @@
             // ================================================================
             //  一体化门诊覆盖率（环形图）
             // ================================================================
-            function renderCover() {
+            function renderCover(val = 76) {
                 const dom = document.getElementById('coverChart');
                 if (!dom) return;
+                if (charts.coverChart && !charts.coverChart.isDisposed()) charts.coverChart.dispose();
                 const chart = echarts.init(dom, 'dark');
                 charts['coverChart'] = chart;
-                const val = 76;
                 const valueSize = Math.max(18, Math.min(28, Math.round(dom.clientHeight * 0.22)));
                 const labelSize = Math.max(10, Math.min(12, Math.round(dom.clientHeight * 0.1)));
                 const option = {
@@ -1149,7 +1188,7 @@
                         bottom: 0,
                         left: 'center'
                     },
-                    grid: { left: '7%', right: '3%', top: '8%', bottom: '13%' },
+                    grid: { left: '4%', right: '2%', top: '5%', bottom: '4%', containLabel: true },
                     xAxis: {
                         type: 'category',
                         data: trendData.labels,
@@ -1575,12 +1614,14 @@
                     button.addEventListener('click', () => {
                         buttons.forEach(item => item.classList.toggle('active', item === button));
                         const isQuarter = button.dataset.period === 'quarter';
+                        currentPeriod = isQuarter ? 'quarter' : 'year';
                         quarterSelector.hidden = !isQuarter;
-                        renderTrend(isQuarter ? 'quarter' : 'year');
+                        renderTrend(currentPeriod);
+                        updateDashboardMetrics();
                     });
                 });
-                yearSelector.addEventListener('change', () => renderTrend(quarterSelector.hidden ? 'year' : 'quarter'));
-                quarterSelector.addEventListener('change', () => renderTrend('quarter'));
+                yearSelector.addEventListener('change', () => { renderTrend(currentPeriod); updateDashboardMetrics(); });
+                quarterSelector.addEventListener('change', () => { renderTrend('quarter'); updateDashboardMetrics(); });
             }
 
             // ================================================================
@@ -1807,6 +1848,7 @@
                         this.classList.add('active');
                         currentMapType = this.dataset.type;
                         renderEnhancedMap();
+                        updateDashboardMetrics();
                     });
                 });
                 document.getElementById('backToProvince').addEventListener('click', backToProvince);
@@ -1828,7 +1870,7 @@
             // ================================================================
             function init() {
                 renderDetectGrid();
-                renderCover();
+                updateDashboardMetrics();
                 renderTrend();
                 renderPathFlow();
                 renderGauge();
