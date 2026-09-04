@@ -33,7 +33,7 @@
         .header {
             background: linear-gradient(180deg, #0d1f3c 0%, #0a1628 100%);
             border-bottom: 1px solid rgba(43, 127, 255, 0.2);
-            padding: 6px 16px 4px;
+            padding: 16px 16px 8px;
             flex-shrink: 0;
             z-index: 10;
         }
@@ -41,7 +41,7 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            margin-bottom: 4px;
+            margin-bottom: 16px;
             position: relative;
         }
         .header-top .title {
@@ -390,9 +390,9 @@
             content: '';
             position: absolute;
             z-index: 0;
-            top: 23px;
-            left: calc(50% + 26px);
-            width: calc(100% - 52px);
+            top: 27px;
+            left: calc(50% + 30px);
+            width: calc(100% - 60px);
             height: 3px;
             background: linear-gradient(90deg, var(--stage-color), var(--next-color));
             box-shadow: 0 0 7px color-mix(in srgb, var(--stage-color) 55%, transparent);
@@ -400,8 +400,8 @@
         .path-stage-icon {
             position: relative;
             z-index: 1;
-            width: 48px;
-            height: 48px;
+            width: 56px;
+            height: 56px;
             border: 1px solid color-mix(in srgb, var(--stage-color) 78%, white 22%);
             border-radius: 50%;
             display: flex;
@@ -421,8 +421,8 @@
             box-shadow: 0 0 18px color-mix(in srgb, var(--stage-color) 45%, transparent);
         }
         .path-stage-icon svg {
-            width: 24px;
-            height: 24px;
+            width: 28px;
+            height: 28px;
             fill: none;
             stroke: currentColor;
             stroke-width: 1.8;
@@ -430,20 +430,20 @@
             stroke-linejoin: round;
         }
         .path-stage-copy {
-            margin-top: 6px;
+            margin-top: 8px;
             max-width: 100%;
             text-align: center;
             white-space: nowrap;
         }
         .path-stage-value {
             color: var(--stage-color);
-            font-size: 14px;
+            font-size: 15px;
             font-weight: 700;
         }
         .path-stage-name {
             margin-left: 3px;
             color: rgba(224, 232, 240, .68);
-            font-size: 13px;
+            font-size: 14px;
         }
         .path-summary {
             display: grid;
@@ -867,7 +867,7 @@
             <span class="time">统计周期 2026年1-8月</span>
         </div>
         <div class="header-kpi">
-            <div class="kpi-item highlight">
+            <div class="kpi-item">
                 <span class="num">386.5<span class="unit">万</span></span>
                 <div class="label">两慢专档患者</div>
                 <span class="change up">↑ 2.3%</span>
@@ -882,7 +882,7 @@
                 <div class="label">糖尿病患者</div>
                 <span class="change up">↑ 3.1%</span>
             </div>
-            <div class="kpi-item highlight">
+            <div class="kpi-item">
                 <span class="num">67.5<span class="unit">%</span></span>
                 <div class="label">检测率</div>
                 <span class="change up">↑ 2.1%</span>
@@ -897,7 +897,7 @@
                 <div class="label">改善率</div>
                 <span class="change up">↑ 1.7%</span>
             </div>
-            <div class="kpi-item highlight">
+            <div class="kpi-item">
                 <span class="num">96.8<span class="unit">%</span></span>
                 <div class="label">数据可信度</div>
                 <span class="change up">↑ 0.3%</span>
@@ -1100,9 +1100,9 @@
             function renderTrend() {
                 const chart = initChart('trendChart');
                 if (!chart) return;
-                const months = ['3月', '4月', '5月', '6月', '7月', '8月'];
-                const primary = [54.2, 55.8, 56.5, 57.8, 58.2, 58.6];
-                const county = [42.5, 42.1, 41.8, 41.5, 41.2, 41.4];
+                const months = ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月'];
+                const primary = [53.1, 53.8, 54.2, 55.8, 56.5, 57.8, 58.2, 58.6];
+                const county = [43.3, 42.8, 42.5, 42.1, 41.8, 41.5, 41.2, 41.4];
                 const option = {
                     backgroundColor: 'transparent',
                     tooltip: {
@@ -1127,7 +1127,7 @@
                         bottom: 0,
                         left: 'center'
                     },
-                    grid: { left: '13%', right: '6%', top: '8%', bottom: '13%' },
+                    grid: { left: '7%', right: '3%', top: '8%', bottom: '13%' },
                     xAxis: {
                         type: 'category',
                         data: months,
